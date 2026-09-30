@@ -1,0 +1,7 @@
+target/
+deployment/
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.vscode/

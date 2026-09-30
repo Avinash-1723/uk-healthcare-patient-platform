@@ -1,0 +1,59 @@
+name: T-001 CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build and test
+        working-directory: ./app
+        run: mvn clean test
+
+      - name: Package application
+        working-directory: ./app
+        run: mvn package
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: cicd-validation-jar
+          path: app/target/*.jar
+
+  deploy:
+    name: Deploy application
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: cicd-validation-jar
+          path: app-artifact
+
+      - name: Make deployment script executable
+        run: chmod +x scripts/deploy.sh
+
+      - name: Deploy application
+        run: ./scripts/deploy.sh
